@@ -1,0 +1,205 @@
+openapi: 3.0.3
+info:
+  title: Photobooth Image Upload API
+  version: 1.0.0
+  description: |
+    API for requesting presigned S3 upload URLs and resolving download URLs by code.
+servers:
+  - url: https://{api_id}.execute-api.{region}.amazonaws.com/{stage}
+    variables:
+      api_id:
+        default: your-api-id
+      region:
+        default: us-east-1
+      stage:
+        default: prod
+paths:
+  /upload:
+    post:
+      summary: Request a presigned S3 upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+      responses:
+        '200':
+          description: Presigned upload URL response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    options:
+      summary: CORS preflight
+      responses:
+        '200':
+          description: OK
+  /upload-request:
+    post:
+      summary: Request a presigned S3 upload URL (alias)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+      responses:
+        '200':
+          description: Presigned upload URL response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    options:
+      summary: CORS preflight
+      responses:
+        '200':
+          description: OK
+  /download:
+    get:
+      summary: Resolve a code to a presigned download URL
+      parameters:
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Presigned download URL response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    options:
+      summary: CORS preflight
+      responses:
+        '200':
+          description: OK
+  /download/{code}:
+    get:
+      summary: Resolve a code to a presigned download URL (path variant)
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Presigned download URL response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    options:
+      summary: CORS preflight
+      responses:
+        '200':
+          description: OK
+components:
+  schemas:
+    UploadRequest:
+      type: object
+      required:
+        - filename
+      properties:
+        filename:
+          type: string
+          example: photo.png
+        contentType:
+          type: string
+          example: image/png
+        createQrCode:
+          type: boolean
+          example: true
+        code:
+          type: string
+          description: Optional custom code
+    UploadResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        uploadUrl:
+          type: string
+          format: uri
+        s3Key:
+          type: string
+        qrCodeKey:
+          type: string
+          nullable: true
+        downloadUrl:
+          type: string
+          format: uri
+          nullable: true
+    DownloadResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        downloadUrl:
+          type: string
+          format: uri
+        s3Key:
+          type: string
+        contentType:
+          type: string
+          nullable: true
+        qrCodeKey:
+          type: string
+          nullable: true
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
